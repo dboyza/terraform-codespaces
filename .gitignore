@@ -1,2 +1,3 @@
 .DS_Store
 labs/terraform/.terraform
+labs/development/.terraform
