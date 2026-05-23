@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.15.4" # Replace with your installed version
+  required_version = ">= 1.15.4"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -10,4 +10,11 @@ terraform {
 
 provider "aws" {
   region = "us-east-1"
+  
+  default_tags {
+    tags = {
+      Managed_By = "Terraform"
+      Project    = "Terraform Training"
+    }
+  }
 }
