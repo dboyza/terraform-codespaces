@@ -9,106 +9,50 @@ resource "aws_vpc" "main" {
   }
 }
 
-# Individual Subnet Resources
-resource "aws_subnet" "subnet_1" {
+# Refactored Subnet Resources using count
+resource "aws_subnet" "subnet" {
+  count             = var.subnet_count
   vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-east-1a"
+  cidr_block        = var.subnet_cidr_blocks[count.index]
+  availability_zone = var.availability_zones[count.index]
 
   tags = {
-    Name = "subnet-1"
+    Name = "subnet-${count.index + 1}"
   }
 }
 
-resource "aws_subnet" "subnet_2" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-east-1b"
-
-  tags = {
-    Name = "subnet-2"
-  }
-}
-
-resource "aws_subnet" "subnet_3" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.3.0/24"
-  availability_zone = "us-east-1c"
-
-  tags = {
-    Name = "subnet-3"
-  }
-}
-
-# Security Groups
-resource "aws_security_group" "web" {
-  name        = "web-sg"
-  description = "Allow web traffic"
+# Refactored Security Groups using count
+resource "aws_security_group" "sg" {
+  count       = 3  # Creating 3 security groups
+  name        = "${var.security_groups[count.index].name}-sg"
+  description = var.security_groups[count.index].description
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = var.security_groups[count.index].ingress_port
+    to_port     = var.security_groups[count.index].ingress_port
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["10.0.0.0/16"]  # Using the same CIDR for simplicity
   }
 
   egress {
     from_port   = 0
     to_port     = 0
-    protocol    = "-1"
+    protocol    = "-1" # -1 means all protocols
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
-    Name = "web-sg"
+    Name = "${var.security_groups[count.index].name}-sg"
   }
 }
 
-resource "aws_security_group" "app" {
-  name        = "app-sg"
-  description = "Allow application traffic"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+# Create multiple route tables
+resource "aws_route_table" "example" {
+  count  = var.route_table_count
+  vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "app-sg"
-  }
-}
-
-resource "aws_security_group" "db" {
-  name        = "db-sg"
-  description = "Allow database traffic"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "db-sg"
+    Name = "route-table-${count.index + 1}"
   }
 }
